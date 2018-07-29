@@ -9,7 +9,9 @@ extern crate yew;
 
 mod router;
 mod routing;
+mod dashboard;
 
+use dashboard::DashboardModel;
 use router::Route;
 use yew::prelude::*;
 
@@ -106,6 +108,7 @@ impl Renderable<Model> for Path {
             Path::Dashboard => html! {
                 <>
                 {"This corresponds to route 'dashboard'"}
+                <DashboardModel: />
                 </>
             },
             Path::Setting => html! {
