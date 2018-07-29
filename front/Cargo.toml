@@ -4,5 +4,10 @@ version = "0.1.0"
 authors = ["Wiwatta  Mongkhonchit <zentetsukenz@gmail.com>"]
 
 [dependencies]
+log = "0.4"
+
 stdweb = "0.4"
 yew = { git = "https://github.com/DenisKolodin/yew" }
+
+serde = "1.0"
+serde_derive = "1.0"
