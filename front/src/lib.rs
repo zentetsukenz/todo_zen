@@ -9,25 +9,30 @@ extern crate yew;
 
 mod router;
 mod routing;
-mod dashboard;
+mod pages;
 
-use dashboard::DashboardModel;
+use pages::inbox::Model as InboxModel;
 use router::Route;
 use yew::prelude::*;
 
-pub enum Path {
-    Dashboard,
-    Setting,
+pub enum Page {
+    Root,
+    Inbox,
+    Projects,
+    Review,
+    References,
+    Someday,
+    Calendar,
     NotFound(String)
 }
 
 pub struct Model {
-    path: Path,
+    page: Page,
     router: Box<Bridge<router::Router<()>>>
 }
 
 pub enum Msg {
-    NavigateTo(Path),
+    NavigateTo(Page),
     HandleRoute(Route<()>)
 }
 
@@ -42,18 +47,23 @@ impl Component for Model {
         router.send(router::Request::GetCurrentRoute);
 
         Model {
-            path: Path::Dashboard,
+            page: Page::Inbox,
             router: router
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::NavigateTo(path) => {
-                let path_segments = match path {
-                    Path::Dashboard => vec!["dashbord".into()],
-                    Path::Setting => vec!["setting".into()],
-                    Path::NotFound(_) => vec!["path_not_found".into()]
+            Msg::NavigateTo(page) => {
+                let path_segments = match page {
+                    Page::Root        => vec!["".into()],
+                    Page::Inbox       => vec!["inbox".into()],
+                    Page::Projects    => vec!["projects".into()],
+                    Page::Review      => vec!["review".into()],
+                    Page::References  => vec!["references".into()],
+                    Page::Someday     => vec!["someday".into()],
+                    Page::Calendar    => vec!["calendar".into()],
+                    Page::NotFound(_) => vec!["path_not_found".into()]
                 };
 
                 let route = router::Route {
@@ -68,16 +78,22 @@ impl Component for Model {
                 false
             }
             Msg::HandleRoute(route) => {
-                info!("Routing: {}", route.to_route_string());
+                debug!("Routing: {}", route.to_route_string());
 
-                self.path = if let Some(first_segment) = route.path_segments.get(0) {
-                    match first_segment.as_str() {
-                        "dashbord" => Path::Dashboard,
-                        "setting" => Path::Setting,
-                        other => Path::NotFound(other.into())
-                    }
-                } else {
-                    Path::NotFound("path_not_found".into())
+                self.page = match route.path_segments.get(0) {
+                    Some(first_segment) => {
+                        match first_segment.as_str() {
+                            ""           => Page::Root,
+                            "inbox"      => Page::Inbox,
+                            "projects"   => Page::Projects,
+                            "review"     => Page::Review,
+                            "references" => Page::References,
+                            "someday"    => Page::Someday,
+                            "calendar"   => Page::Calendar,
+                            other        => Page::NotFound(other.into())
+                        }
+                    },
+                    None => Page::NotFound("path_not_found".into())
                 };
 
                 true
@@ -91,32 +107,56 @@ impl Renderable<Model> for Model {
         html! {
             <div>
                 <nav class="menu",>
-                    <button onclick=|_| Msg::NavigateTo(Path::Dashboard),>{ "Go to Dashboard" }</button>
-                    <button onclick=|_| Msg::NavigateTo(Path::Setting),>{ "Go to Setting" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::Inbox),>{ "Go to Inbox" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::Projects),>{ "Go to Projects" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::Review),>{ "Go to Review" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::References),>{ "Go to References" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::Someday),>{ "Go to Someday" }</button>
+                    <button onclick=|_| Msg::NavigateTo(Page::Calendar),>{ "Go to Calendar" }</button>
                 </nav>
                 <div>
-                    {self.path.view()}
+                    {self.page.view()}
                 </div>
             </div>
         }
     }
 }
 
-impl Renderable<Model> for Path {
+impl Renderable<Model> for Page {
     fn view(&self) -> Html<Model> {
         match *self {
-            Path::Dashboard => html! {
+            Page::Root | Page::Inbox => html! {
                 <>
-                {"This corresponds to route 'dashboard'"}
-                <DashboardModel: />
+                {"This corresponds to route 'inbox'"}
+                <InboxModel: />
                 </>
             },
-            Path::Setting => html! {
+            Page::Projects => html! {
                 <>
-                {"This corresponds to route 'setting'"}
+                {"This corresponds to route 'projects'"}
                 </>
             },
-            Path::NotFound(ref path) => html! {
+            Page::Review => html! {
+                <>
+                {"This corresponds to route 'review'"}
+                </>
+            },
+            Page::References => html! {
+                <>
+                {"This corresponds to route 'references'"}
+                </>
+            },
+            Page::Someday => html! {
+                <>
+                {"This corresponds to route 'someday'"}
+                </>
+            },
+            Page::Calendar => html! {
+                <>
+                {"This corresponds to route 'calendar'"}
+                </>
+            },
+            Page::NotFound(ref path) => html! {
                 <>
                 {format!("Invalid path: '{}'", path)}
                 </>
