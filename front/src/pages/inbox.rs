@@ -1,7 +1,9 @@
 use yew::prelude::*;
+use yew::services::ConsoleService;
 
 pub struct Model {
     items: Vec<String>,
+    console: ConsoleService
 }
 
 pub enum Msg {
@@ -18,28 +20,29 @@ impl Component for Model {
     fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
         Model {
             items: vec![],
+            console: ConsoleService::new()
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Add => {
-                debug!("Adding todo");
+                self.console.log(&format!("Adding todo"));
 
                 false
             }
             Msg::MarkAsTodo => {
-                debug!("Marking item as todo");
+                self.console.log(&format!("Marking item as todo"));
 
                 false
             }
             Msg::MarkAsDone => {
-                debug!("Marking item as done");
+                self.console.log(&format!("Marking item as done"));
 
                 false
             }
             Msg::Delete => {
-                debug!("Deleting item");
+                self.console.log(&format!("Deleting item"));
 
                 false
             }

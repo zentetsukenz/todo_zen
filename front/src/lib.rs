@@ -14,6 +14,7 @@ mod pages;
 use pages::inbox::Model as InboxModel;
 use router::Route;
 use yew::prelude::*;
+use yew::services::ConsoleService;
 
 pub enum Page {
     Root,
@@ -28,7 +29,8 @@ pub enum Page {
 
 pub struct Model {
     page: Page,
-    router: Box<Bridge<router::Router<()>>>
+    router: Box<Bridge<router::Router<()>>>,
+    console: ConsoleService
 }
 
 pub enum Msg {
@@ -48,7 +50,8 @@ impl Component for Model {
 
         Model {
             page: Page::Inbox,
-            router: router
+            router: router,
+            console: ConsoleService::new()
         }
     }
 
@@ -78,7 +81,7 @@ impl Component for Model {
                 false
             }
             Msg::HandleRoute(route) => {
-                debug!("Routing: {}", route.to_route_string());
+                self.console.log(&format!("Routing: {}", route.to_route_string()));
 
                 self.page = match route.path_segments.get(0) {
                     Some(first_segment) => {
