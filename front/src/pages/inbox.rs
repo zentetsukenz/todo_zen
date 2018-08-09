@@ -1,18 +1,19 @@
 use yew::prelude::*;
 use yew::services::ConsoleService;
 
+use todo::Todo;
+
 pub struct Model {
-    items: Vec<String>,
-    adding_item: String,
+    todos: Vec<Todo>,
+    adding_todo: String,
     console: ConsoleService
 }
 
 pub enum Msg {
     Add,
-    AddingItemChanged(String),
-    MarkAsTodo,
-    MarkAsDone,
-    Delete,
+    AddingTodoChanged(String),
+    Delete(usize, String),
+    Nope,
 }
 
 impl Component for Model {
@@ -21,8 +22,8 @@ impl Component for Model {
 
     fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
         Model {
-            items: vec![],
-            adding_item: String::new(),
+            todos: vec![],
+            adding_todo: String::new(),
             console: ConsoleService::new()
         }
     }
@@ -32,45 +33,29 @@ impl Component for Model {
             Msg::Add => {
                 self.console.log(&format!("Adding todo"));
 
-                self.items.push(self.adding_item.clone());
-                self.adding_item = String::new();
+                let new_todo = self.build_todo();
+                self.todos.push(new_todo);
 
                 true
             }
-            Msg::AddingItemChanged(new_adding_item) => {
-                self.console.log(&format!("Adding item changed to {}", new_adding_item));
-                self.adding_item = new_adding_item;
+            Msg::AddingTodoChanged(new_adding_todo) => {
+                self.console.log(&format!("Adding item changed to {}", new_adding_todo));
+                self.adding_todo = new_adding_todo;
 
                 true
             }
-            Msg::MarkAsTodo => {
-                self.console.log(&format!("Marking item as todo"));
+            Msg::Delete(index, uuid) => {
+                self.console.log(&format!("Deleting todo: {} {}", index, uuid));
+                let _removing_todo = self.todos.remove(index);
 
-                false
+                true
             }
-            Msg::MarkAsDone => {
-                self.console.log(&format!("Marking item as done"));
-
-                false
-            }
-            Msg::Delete => {
-                self.console.log(&format!("Deleting item"));
-
-                false
-            }
+            Msg::Nope => { false }
         }
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
-    }
-}
-
-fn view_item(item: &str) -> Html<Model> {
-    html! {
-        <div>
-            { item }
-        </div>
     }
 }
 
@@ -80,19 +65,43 @@ impl Renderable<Model> for Model {
             <div>
                 <div>
                     <input
-                        value=&self.adding_item,
-                        oninput=|e| Msg::AddingItemChanged(e.value),/>
+                        value=&self.adding_todo,
+                        oninput=|e| Msg::AddingTodoChanged(e.value),
+                        onkeypress=|e| {
+                            if e.key() == "Enter" { Msg::Add } else { Msg::Nope }
+                        } ,/>
                 </div>
 
                 <div>
                     <button onclick=|_| Msg::Add,>{ "Add" }</button>
-                    <button onclick=|_| Msg::MarkAsTodo,>{ "Mark as todo" }</button>
-                    <button onclick=|_| Msg::MarkAsDone,>{ "Mark as done" }</button>
-                    <button onclick=|_| Msg::Delete,>{ "Delete" }</button>
                 </div>
 
-                { for self.items.iter().map(|item| view_item(item)) }
+                { for self.todos.iter().enumerate().map(|(i, todo)| self.view_todo(i, todo.clone())) }
             </div>
+        }
+    }
+}
+
+impl Model {
+    fn view_todo(&self, index: usize, todo: Todo) -> Html<Model> {
+        html! {
+            <div>
+                { &todo.content }
+                <button onclick=|_| Msg::Delete(index, todo.uuid.clone()),>{ "Delete" }</button>
+            </div>
+        }
+    }
+
+
+    fn build_todo(&mut self) -> Todo {
+        let adding_todo_content = self.adding_todo.clone();
+        self.adding_todo = String::new();
+
+        Todo {
+            uuid: String::new(),
+            content: adding_todo_content,
+            context: String::new(),
+            project: String::new(),
         }
     }
 }
