@@ -10,7 +10,7 @@ extern crate yew;
 mod router;
 mod routing;
 mod pages;
-mod todo;
+mod models;
 
 use pages::inbox::Model as InboxModel;
 use router::Route;
