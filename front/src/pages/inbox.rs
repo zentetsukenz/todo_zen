@@ -1,5 +1,8 @@
+use failure::Error;
+
 use yew::prelude::*;
-use yew::services::ConsoleService;
+use yew::services::{ConsoleService};
+use yew::format::Json;
 
 use models::next_action::NextAction;
 use models::anything::Anything;
@@ -9,7 +12,7 @@ pub struct Model {
     inbox: Vec<Anything>,
     actionable: Vec<Actionable>,
     next_actions: Vec<NextAction>,
-    console: ConsoleService
+    console: ConsoleService,
 }
 
 struct Actionable {
@@ -35,13 +38,13 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Model {
             new_item: String::new(),
             inbox: vec![],
             actionable: vec![],
             next_actions: vec![],
-            console: ConsoleService::new()
+            console: ConsoleService::new(),
         }
     }
 

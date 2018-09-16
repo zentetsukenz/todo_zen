@@ -2,7 +2,7 @@ defmodule TodoZenWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", TodoZenWeb.RoomChannel
+  channel "room:*", TodoZenWeb.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

@@ -1,5 +1,6 @@
 extern crate yew;
 extern crate app;
+extern crate failure;
 
 use yew::prelude::*;
 use app::Model;

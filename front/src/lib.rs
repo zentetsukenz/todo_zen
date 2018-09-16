@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate stdweb;
 #[macro_use]
 extern crate log;
@@ -6,16 +7,22 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate yew;
+extern crate failure;
 
 mod router;
 mod routing;
-mod pages;
 mod models;
+mod pages;
+mod workers;
 
 use pages::inbox::Model as InboxModel;
 use router::Route;
+
 use yew::prelude::*;
 use yew::services::ConsoleService;
+
+use workers::phoenix;
+use workers::phoenix::Socket;
 
 pub enum Page {
     Root,
@@ -31,12 +38,14 @@ pub enum Page {
 pub struct Model {
     page: Page,
     router: Box<Bridge<router::Router<()>>>,
-    console: ConsoleService
+    phoenix: Box<Bridge<phoenix::Phoenix>>,
+    console: ConsoleService,
 }
 
 pub enum Msg {
     NavigateTo(Page),
-    HandleRoute(Route<()>)
+    HandleRoute(Route<()>),
+    HandlePhoenix(Socket),
 }
 
 impl Component for Model {
@@ -44,15 +53,19 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let callback = link.send_back(|route: Route<()>| Msg::HandleRoute(route));
-        let mut router = router::Router::bridge(callback);
+        let router_callback = link.send_back(|route: Route<()>| Msg::HandleRoute(route));
+        let mut router = router::Router::bridge(router_callback);
 
         router.send(router::Request::GetCurrentRoute);
+
+        let phoenix_callback = link.send_back(|socket: phoenix::Socket| Msg::HandlePhoenix(socket));
+        let mut phoenix = phoenix::Phoenix::bridge(phoenix_callback);
 
         Model {
             page: Page::Inbox,
             router: router,
-            console: ConsoleService::new()
+            phoenix: phoenix,
+            console: ConsoleService::new(),
         }
     }
 
@@ -102,6 +115,11 @@ impl Component for Model {
 
                 true
             }
+            Msg::HandlePhoenix(socket) => {
+                self.console.log(&format!("Handling socket"));
+
+                false
+            }
         }
     }
 }
@@ -119,16 +137,16 @@ impl Renderable<Model> for Model {
                     <button onclick=|_| Msg::NavigateTo(Page::Calendar),>{ "Go to Calendar" }</button>
                 </nav>
                 <div>
-                    {self.page.view()}
+                    {self.page_view()}
                 </div>
             </div>
         }
     }
 }
 
-impl Renderable<Model> for Page {
-    fn view(&self) -> Html<Model> {
-        match *self {
+impl Model {
+    fn page_view(&self) -> Html<Model> {
+        match self.page {
             Page::Root | Page::Inbox => html! {
                 <>
                 {"This corresponds to route 'inbox'"}
