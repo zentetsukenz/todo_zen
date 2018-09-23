@@ -1,5 +1,3 @@
-use failure::Error;
-
 use yew::prelude::*;
 use yew::services::{ConsoleService};
 use yew::format::Json;

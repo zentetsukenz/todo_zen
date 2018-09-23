@@ -7,7 +7,6 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate yew;
-extern crate failure;
 
 mod router;
 mod routing;
@@ -22,7 +21,7 @@ use yew::prelude::*;
 use yew::services::ConsoleService;
 
 use workers::phoenix;
-use workers::phoenix::Socket;
+use workers::phoenix::SocketMessage;
 
 pub enum Page {
     Root,
@@ -35,8 +34,14 @@ pub enum Page {
     NotFound(String)
 }
 
+pub enum ConnectionState {
+    Connected,
+    Disconnected,
+}
+
 pub struct Model {
     page: Page,
+    connection: ConnectionState,
     router: Box<Bridge<router::Router<()>>>,
     phoenix: Box<Bridge<phoenix::Phoenix>>,
     console: ConsoleService,
@@ -45,7 +50,7 @@ pub struct Model {
 pub enum Msg {
     NavigateTo(Page),
     HandleRoute(Route<()>),
-    HandlePhoenix(Socket),
+    HandlePhoenix(SocketMessage),
 }
 
 impl Component for Model {
@@ -58,11 +63,14 @@ impl Component for Model {
 
         router.send(router::Request::GetCurrentRoute);
 
-        let phoenix_callback = link.send_back(|socket: phoenix::Socket| Msg::HandlePhoenix(socket));
+        let phoenix_callback = link.send_back(|socket_message: phoenix::SocketMessage| {
+            Msg::HandlePhoenix(socket_message)
+        });
         let mut phoenix = phoenix::Phoenix::bridge(phoenix_callback);
 
         Model {
             page: Page::Inbox,
+            connection: ConnectionState::Disconnected,
             router: router,
             phoenix: phoenix,
             console: ConsoleService::new(),
